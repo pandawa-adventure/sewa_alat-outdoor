@@ -69,6 +69,8 @@ body{font-family:'Plus Jakarta Sans',Arial; margin:0; background:var(--krem); co
 .tabs button{flex:1; padding:8px; border:none; background:transparent; font-weight:700; border-radius:8px; font-size:11px}
 .tabs button.aktif{background:var(--hijau); color:white}
 @media print{body *{visibility:hidden} #areaStruk, #areaStruk *{visibility:visible} #areaStruk{position:absolute; top:0; left:0; width:100%}}
+.modal-box label{display:block; font-size:11px; font-weight:700; margin:8px 0 4px; text-align:left}
+.modal-box input{width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; font-size:12px; background:white; box-sizing:border-box}
 </style>
 </head>
 <body>
@@ -175,8 +177,6 @@ function exportWA(){ let lap="LAPORAN "+SETTING.namaToko+"\n\n"; PESANAN.forEach
 async function loadProduk(){ try{ const {data, error} = await supabaseClient.from('produk').select('*').order('id',{ascending:true}); if(error) throw error; if(data && data.length>0){ ALAT = data.map((p,i)=>({id:p.id, nama:p.nama||'Produk', kat: (()=>{ let k=(p.kategori||'lain').toLowerCase(); if(k.includes('tenda')) return 'tenda'; if(k.includes('carrier')||k.includes('tas')) return 'tas'; if(k.includes('tidur')||k.includes('sleep')) return 'tidur'; if(k.includes('masak')||k.includes('kompor')) return 'masak'; if(k.includes('sepatu')||k.includes('sandal')) return 'sepatu'; if(k.includes('pakaian')||k.includes('baju')||k.includes('jaket')) return 'pakaian'; if(k.includes('penerangan')||k.includes('lampu')||k.includes('senter')) return 'penerangan'; if(k.includes('perlengkapan')) return 'perlengkapan'; if(k.includes('paket')) return 'paket'; return 'lain'; })(), harga:Number(p.harga)||0, stok:Number(p.stok ?? 5), img:p.foto_url || p.gambar || p.foto || p.image_url || "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=400", desc:p.deskripsi || p.keterangan || ''})); document.getElementById('statusProduk').innerText='✅ '+ALAT.length+' produk dari Supabase'; } else { ALAT = [...ALAT_AWAL]; } }catch(e){ document.getElementById('statusProduk').innerText='Produk lokal - '+e.message; if(ALAT.length===0) ALAT=[...ALAT_AWAL]; } tampil(); }
 async function loadPesanan(){ try{ const {data, error} = await supabaseClient.from('pesanan').select('*').order('id',{ascending:false}); if(error) throw error; PESANAN = (data||[]).map(r=>{ let pengali=1; let label=''; try{ const it=(r.items||[])[0]; if(it && it.pengali) pengali=it.pengali; }catch(e){} if(r.hari===3 && pengali===1) label='Paket 3D2H - 3 Hari 2 Malam (Harga 1x)'; else label=(r.hari||1)+' Hari (Harga '+(pengali||r.hari)+'x)'; return {dbId:r.id, kode:r.kode, nama:r.nama, wa:r.wa, tglAmbil:r.tgl_ambil, tglKembali:r.tgl_kembali, hari:r.hari, pengali:pengali, label:label, jaminan:r.jaminan, catatan:r.catatan, bayar:r.bayar, total:Number(r.total||0), items:r.items||[], bukti:r.bukti||"", status:r.status||"BOOKING", statusBayar:r.status_bayar||"BELUM BAYAR", jumlahDP:ambilDPdariBayar(r.bayar), dibuat:r.dibuat}; }); }catch(e){ console.log(e); } if(isAdmin) renderAdmin(); renderBookingUmum(); }
 tampilkanAwal(); async function tampilkanAwal(){ terapkanSetting(); tampil(); await loadSetting(); await loadProduk(); await loadPesanan(); }
-.modal-box label{display:block; font-size:11px; font-weight:700; margin:8px 0 4px; text-align:left}
-.modal-box input{width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; font-size:12px; background:white; box-sizing:border-box}
 </script>
 </body>
 </html>
